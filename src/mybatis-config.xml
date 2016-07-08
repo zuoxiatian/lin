@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+	<settings>
+	
+		<!-- 自动映射标准的 bean 属性名和标准的数据表的列名. 例如 lastName 和 last_name -->
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+		
+		<!-- 配置是否延迟加载关联的属性 -->
+		<setting name="lazyLoadingEnabled" value="true"/>
+		
+		<!-- 若为 true, 则当使用了某一个 bean 的任意一个属性, 则也会初始化其所有的属性. 包括关联的属性. -->
+		<setting name="aggressiveLazyLoading" value="false"/>
+		
+		<!-- 配置启用二级缓存 -->
+		<setting name="cacheEnabled" value="true"/>
+		
+	</settings>
+
+</configuration>

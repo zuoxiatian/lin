@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+	<context:property-placeholder location="classpath:jdbc.properties"/>
+	
+	<bean id="dataSource"
+		class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="user" value="${jdbc.user}"/>
+		<property name="password" value="${jdbc.password}"/>
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}"/>
+		<property name="driverClass" value="${jdbc.driverClass}"/>	
+	</bean>
+	<!--  
+		1. 因为 mybatis 和 jdbc 使用的都是 DataSourceTransactionManager 事务管理器. 所以在 dao 层实际上既可以 mybatis
+		也可以使用 jdbc.
+		2. 若底层 dao 使用的是 hibernate, 则需要使用 hibernate 对应的事务管理器:HibernateTransactionManager.
+		那么底层 dao 还可以使用 jdbc 吗 ?
+		若 HibernateTransactionManager 是 DataSourceTransactionManager 的子类, 则可以. 
+		若 HibernateTransactionManager 和 DataSourceTransactionManager 之间没有任何父子关系, 则不可以.
+		因为  HibernateTransactionManager 和 DataSourceTransactionManager 是并列的兄弟关系, 所以不可以!
+	-->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property ref="dataSource" name="dataSource"/>
+	</bean>
+	
+	<tx:annotation-driven/>
+	
+	<!--  
+		1. Spring 整合第三方框架一般都使用 FactoryBean.
+		2. BeanFactory 和 FactoryBean 有什么区别 ?
+		1). BeanFactory 是 ApplicationContext 的父接口. 
+		2). FactoryBean 是在 IOC 容器中配置 bean 的一种方式. 多用于整合第三方框架.
+		3). 在 IOC 容器中配置 bean 的方式
+		①. 全类名. 通过反射的方式来参加 bean 的实例. 
+		②. 工厂方法. 分为静态工厂方法和实例工厂方法.
+		③. 通过实现 FactoryBean 接口. 
+	-->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+	</bean>
+	
+	<!--  
+		配置扫描 Mapper 接口.
+		1. mybatis 为 Mapper 接口动态生成代理类. 实际上起作用的是 Mapper 的代理类. 
+	-->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.atguigu.mybatis"/>
+	</bean>
+</beans>

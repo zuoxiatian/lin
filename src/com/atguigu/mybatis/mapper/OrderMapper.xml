@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--  
+	mybatis 的 Mapper.xml 文件一定是搭配 Mapper 接口一起使用的!
+-->
+<mapper namespace="com.atguigu.mybatis.mapper.OrderMapper">
+	
+	<select id="testId" resultType="com.atguigu.mybatis.bean.Order">
+		SELECT id, order_number, customer_id AS "customer.id"
+		FROM orders o
+		WHERE id IN
+		<!--  
+		collections 指定变量的名字. 注意: 不需要使用 #{} 进行包含
+		open 以什么开始
+		close 以什么结束
+		separator 变量以什么进行分割.
+		item 指定具体的变量
+		在 foreach 标签里面, 可以使用 #{} 来引用正在遍历的变量. 
+		-->
+		<foreach collection="ids" open="(" close=")" separator="," item="id">
+			#{id}
+		</foreach>
+	</select>
+	<!--  
+	where: 会根据 where 标签中的子标签情况动态生成 where 子句. 或不生成 where 子句.
+	还可以动态的删除 OR 或 AND
+	if: 判断变量是否存在, 或变量是否满足指定的查询条件. 
+	-->
+	<select id="testIf" resultType="com.atguigu.mybatis.bean.Order">
+		SELECT id, order_number, customer_id AS "customer.id"
+		FROM orders o
+		<where>
+			<if test="minId != null">
+				<![CDATA[
+				id >= #{minId}
+				]]>
+			</if>
+			<if test="maxId" != null>
+				<![CDATA[
+				AND id <= #{maxId}
+				]]>
+			</if>
+		</where>
+	</select>
+	
+	<select id="getOrders" resultType="com.atguigu.mybatis.bean.Order">
+		SELECT o.id, order_number, customer_id
+		FROM orders o
+		WHERE o.customer_id = #{id}
+	</select>
+	
+	<resultMap type="com.atguigu.mybatis.bean.Order" id="orderMap">
+		<!-- 映射正常的属性 -->
+		<id column="id" property="id"/>
+		<result column="order_number" property="orderNumber"/>
+		<!-- 
+			映射关联对象. 
+			对多使用 collection 节点. 对一使用 association 节点
+			property 指定属性名
+			column 指定时候用的列. 该列支通常需要传递到下面的 SQL 语句中. 
+			select 指定额外的 SQL.
+		-->
+		<association 
+			property="customer"
+			column="customer_id"
+			select="com.atguigu.mybatis.mapper.CustomerMapper.get2"></association>
+	</resultMap>
+	
+	<!--  
+		若需要使用额外的 SQL 语句查询关联对象, 则必须使用 resultMap.
+		因为使用 resultType 无法完成对关联对象的再映射. 
+		且当前的 SQL 只需要查询当前数据表的数据. 而不再需要关联查询. 
+	-->
+	<select id="get2" resultMap="orderMap">
+		SELECT o.id, order_number, customer_id
+		FROM orders o 
+		WHERE o.id = #{id}
+	</select>
+	<!--  
+		"对一" . 例如 Order 对 Customer.
+		1. 可以使用一条语句, 查询当前记录及其关联的记录. 
+		2. 一定是使用关联查询. JOIN
+		3. 可以使用数据列别名的方式直接初始化关联的属性. 
+	-->
+	<select id="get" resultType="com.atguigu.mybatis.bean.Order">
+		SELECT o.id, order_number, customer_id AS "customer.id", last_name AS "customer.lastName"
+		FROM orders o 
+		LEFT OUTER JOIN customers c 
+		ON o.customer_id = c.id
+		WHERE o.id = #{id}
+	</select>
+</mapper>
